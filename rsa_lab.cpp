@@ -3,6 +3,8 @@
 
 using namespace std;
 
+const int MAX_MESSAGE_LENGTH = 200;
+
 struct RSAKeyPair
 {
     int p;
@@ -12,6 +14,13 @@ struct RSAKeyPair
     int e;
     int d;
     bool generated;
+};
+
+struct EncryptedMessage
+{
+    int values[MAX_MESSAGE_LENGTH];
+    int length;
+    bool available;
 };
 
 // Reads text input from the user.
@@ -99,6 +108,20 @@ void show_gcd_steps(int a, int b)
     }
 
     write_line("GCD = " + ::to_string(a));
+}
+
+// Calculates base^exponent mod modulus using repeated modular multiplication.
+int modular_power(int base, int exponent, int modulus)
+{
+    int result = 1;
+    base = base % modulus;
+
+    for (int i = 0; i < exponent; i++)
+    {
+        result = (result * base) % modulus;
+    }
+
+    return result;
 }
 
 // Finds d where e * d mod phi = 1.
@@ -240,6 +263,95 @@ void generate_keys(RSAKeyPair &keys)
     view_current_keys(keys);
 }
 
+// Encrypts a message using the public key.
+void encrypt_message(const RSAKeyPair &keys, EncryptedMessage &encrypted)
+{
+    if (!keys.generated)
+    {
+        write_line("");
+        write_line("Please generate RSA keys before encrypting a message.");
+        return;
+    }
+
+    string message = read_string("Enter a short message to encrypt: ");
+
+    while (message.length() == 0 or message.length() > MAX_MESSAGE_LENGTH)
+    {
+        write_line("Message must be between 1 and " + ::to_string(MAX_MESSAGE_LENGTH) + " characters.");
+        message = read_string("Enter a short message to encrypt: ");
+    }
+
+    encrypted.length = message.length();
+
+    write_line("");
+    write_line("====== ENCRYPTION STEPS ======");
+    write_line("Formula: encrypted = message^e mod n");
+    write_line("Using public key: (" + ::to_string(keys.e) + ", " + ::to_string(keys.n) + ")");
+    write_line("");
+
+    for (int i = 0; i < encrypted.length; i++)
+    {
+        int ascii_value = message[i];
+        int encrypted_value = modular_power(ascii_value, keys.e, keys.n);
+
+        encrypted.values[i] = encrypted_value;
+
+        write_line("'" + string(1, message[i]) + "' -> ASCII " + ::to_string(ascii_value) + " -> encrypted " + ::to_string(encrypted_value));
+    }
+
+    encrypted.available = true;
+
+    write_line("");
+    write_line("Encrypted message as numbers:");
+
+    for (int i = 0; i < encrypted.length; i++)
+    {
+        write(::to_string(encrypted.values[i]) + " ");
+    }
+
+    write_line("");
+}
+
+// Decrypts the current encrypted message using the private key.
+void decrypt_message(const RSAKeyPair &keys, const EncryptedMessage &encrypted)
+{
+    if (!keys.generated)
+    {
+        write_line("");
+        write_line("Please generate RSA keys before decrypting a message.");
+        return;
+    }
+
+    if (!encrypted.available)
+    {
+        write_line("");
+        write_line("There is no encrypted message to decrypt yet.");
+        return;
+    }
+
+    string decrypted = "";
+
+    write_line("");
+    write_line("====== DECRYPTION STEPS ======");
+    write_line("Formula: decrypted = encrypted^d mod n");
+    write_line("Using private key: (" + ::to_string(keys.d) + ", " + ::to_string(keys.n) + ")");
+    write_line("");
+
+    for (int i = 0; i < encrypted.length; i++)
+    {
+        int encrypted_value = encrypted.values[i];
+        int ascii_value = modular_power(encrypted_value, keys.d, keys.n);
+        char character = (char)ascii_value;
+
+        decrypted += character;
+
+        write_line(::to_string(encrypted_value) + " -> ASCII " + ::to_string(ascii_value) + " -> '" + string(1, character) + "'");
+    }
+
+    write_line("");
+    write_line("Decrypted message: " + decrypted);
+}
+
 // Lets the user test whether a number is prime.
 void test_prime_checking()
 {
@@ -289,7 +401,7 @@ void display_menu()
 }
 
 // Runs the selected menu option.
-void run_menu_option(int choice, RSAKeyPair &keys)
+void run_menu_option(int choice, RSAKeyPair &keys, EncryptedMessage &encrypted)
 {
     switch (choice)
     {
@@ -302,13 +414,11 @@ void run_menu_option(int choice, RSAKeyPair &keys)
         break;
 
     case 3:
-        write_line("");
-        write_line("Encrypt message feature coming soon.");
+        encrypt_message(keys, encrypted);
         break;
 
     case 4:
-        write_line("");
-        write_line("Decrypt message feature coming soon.");
+        decrypt_message(keys, encrypted);
         break;
 
     case 5:
@@ -353,6 +463,10 @@ int main()
     RSAKeyPair keys;
     keys.generated = false;
 
+    EncryptedMessage encrypted;
+    encrypted.length = 0;
+    encrypted.available = false;
+
     int choice;
 
     write_line("Welcome to the RSA Cryptography Lab.");
@@ -361,7 +475,7 @@ int main()
     {
         display_menu();
         choice = read_integer_range("Choose an option: ", 0, 9);
-        run_menu_option(choice, keys);
+        run_menu_option(choice, keys, encrypted);
 
     } while (choice != 0);
 
