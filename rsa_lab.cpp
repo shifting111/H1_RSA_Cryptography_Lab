@@ -532,6 +532,69 @@ void show_rsa_explanation()
     write_line("- It connects programming concepts to a real-world cryptography system.");
     write_line("- It goes beyond basic input/output and includes file handling and encryption logic.");
 }
+// Attempts to crack a small RSA key by factorising n.
+void attempt_simple_rsa_crack()
+{
+    write_line("");
+    write_line("====== SIMPLE RSA CRACK MODE ======");
+    write_line("");
+    write_line("This feature tries to factor n back into p and q.");
+    write_line("It only works quickly for small numbers.");
+    write_line("Real RSA uses extremely large primes so this is not practical.");
+    write_line("");
+
+    int n = read_integer("Enter public key value n to factor: ");
+
+    while (n < 4)
+    {
+        write_line("n must be at least 4.");
+        n = read_integer("Enter public key value n to factor: ");
+    }
+
+    bool found = false;
+    int p = 0;
+    int q = 0;
+
+    write_line("");
+    write_line("Trying possible factors...");
+
+    for (int factor = 2; factor <= n / 2; factor++)
+    {
+        if (n % factor == 0)
+        {
+            int other_factor = n / factor;
+
+            if (is_prime(factor) and is_prime(other_factor))
+            {
+                p = factor;
+                q = other_factor;
+                found = true;
+                break;
+            }
+        }
+    }
+
+    if (found)
+    {
+        int phi = (p - 1) * (q - 1);
+
+        write_line("");
+        write_line("Factors found:");
+        write_line("p = " + ::to_string(p));
+        write_line("q = " + ::to_string(q));
+        write_line("n = " + ::to_string(p) + " x " + ::to_string(q) + " = " + ::to_string(n));
+        write_line("phi = (p - 1)(q - 1) = " + ::to_string(phi));
+        write_line("");
+        write_line("This shows that small RSA keys are weak because n can be factorised.");
+        write_line("If an attacker finds p and q, they can calculate phi and work toward the private key.");
+    }
+    else
+    {
+        write_line("");
+        write_line("No prime factor pair was found.");
+        write_line("This may mean n is not the product of two prime numbers.");
+    }
+}
 
 // Displays the main menu for the RSA Cryptography Lab.
 void display_menu()
@@ -586,8 +649,7 @@ void run_menu_option(int choice, RSAKeyPair &keys, EncryptedMessage &encrypted)
         break;
 
     case 8:
-        write_line("");
-        write_line("Simple RSA crack feature coming soon.");
+        attempt_simple_rsa_crack();
         break;
 
     case 9:
