@@ -1,5 +1,6 @@
 #include "splashkit.h"
 #include <string>
+#include <fstream>
 
 using namespace std;
 
@@ -352,6 +353,97 @@ void decrypt_message(const RSAKeyPair &keys, const EncryptedMessage &encrypted)
     write_line("Decrypted message: " + decrypted);
 }
 
+// Saves the encrypted message to a text file.
+void save_encrypted_message(const EncryptedMessage &encrypted)
+{
+    if (!encrypted.available)
+    {
+        write_line("");
+        write_line("There is no encrypted message to save.");
+        return;
+    }
+
+    string filename = read_string("Enter filename to save to, for example encrypted_message.txt: ");
+
+    while (filename == "")
+    {
+        write_line("Filename cannot be empty.");
+        filename = read_string("Enter filename to save to, for example encrypted_message.txt: ");
+    }
+
+    ofstream output_file(filename);
+
+    if (!output_file.is_open())
+    {
+        write_line("");
+        write_line("Could not open file for writing.");
+        return;
+    }
+
+    output_file << encrypted.length << endl;
+
+    for (int i = 0; i < encrypted.length; i++)
+    {
+        output_file << encrypted.values[i] << " ";
+    }
+
+    output_file.close();
+
+    write_line("");
+    write_line("Encrypted message saved successfully to " + filename + ".");
+}
+
+// Loads an encrypted message from a text file.
+void load_encrypted_message(EncryptedMessage &encrypted)
+{
+    string filename = read_string("Enter filename to load from, for example encrypted_message.txt: ");
+
+    while (filename == "")
+    {
+        write_line("Filename cannot be empty.");
+        filename = read_string("Enter filename to load from, for example encrypted_message.txt: ");
+    }
+
+    ifstream input_file(filename);
+
+    if (!input_file.is_open())
+    {
+        write_line("");
+        write_line("Could not open file for reading.");
+        return;
+    }
+
+    input_file >> encrypted.length;
+
+    if (encrypted.length <= 0 or encrypted.length > MAX_MESSAGE_LENGTH)
+    {
+        write_line("");
+        write_line("The file does not contain a valid encrypted message length.");
+        input_file.close();
+        return;
+    }
+
+    for (int i = 0; i < encrypted.length; i++)
+    {
+        input_file >> encrypted.values[i];
+    }
+
+    input_file.close();
+
+    encrypted.available = true;
+
+    write_line("");
+    write_line("Encrypted message loaded successfully from " + filename + ".");
+    write_line("Loaded encrypted numbers:");
+
+    for (int i = 0; i < encrypted.length; i++)
+    {
+        write(::to_string(encrypted.values[i]) + " ");
+    }
+
+    write_line("");
+}
+
 // Lets the user test whether a number is prime.
 void test_prime_checking()
 {
@@ -422,13 +514,11 @@ void run_menu_option(int choice, RSAKeyPair &keys, EncryptedMessage &encrypted)
         break;
 
     case 5:
-        write_line("");
-        write_line("Save encrypted message feature coming soon.");
+        save_encrypted_message(encrypted);
         break;
 
     case 6:
-        write_line("");
-        write_line("Load encrypted message feature coming soon.");
+        load_encrypted_message(encrypted);
         break;
 
     case 7:
