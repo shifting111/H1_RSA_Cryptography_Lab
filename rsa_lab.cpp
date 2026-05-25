@@ -3,6 +3,17 @@
 
 using namespace std;
 
+struct RSAKeyPair
+{
+    int p;
+    int q;
+    int n;
+    int phi;
+    int e;
+    int d;
+    bool generated;
+};
+
 // Reads text input from the user.
 string read_string(string prompt)
 {
@@ -90,6 +101,145 @@ void show_gcd_steps(int a, int b)
     write_line("GCD = " + ::to_string(a));
 }
 
+// Finds d where e * d mod phi = 1.
+int find_modular_inverse(int e, int phi)
+{
+    for (int d = 1; d < phi; d++)
+    {
+        if ((e * d) % phi == 1)
+        {
+            return d;
+        }
+    }
+
+    return -1;
+}
+
+// Displays the current RSA key values.
+void view_current_keys(const RSAKeyPair &keys)
+{
+    if (!keys.generated)
+    {
+        write_line("");
+        write_line("No RSA keys have been generated yet.");
+        return;
+    }
+
+    write_line("");
+    write_line("====== CURRENT RSA KEYS ======");
+    write_line("p: " + ::to_string(keys.p));
+    write_line("q: " + ::to_string(keys.q));
+    write_line("n = p x q: " + ::to_string(keys.n));
+    write_line("phi = (p - 1)(q - 1): " + ::to_string(keys.phi));
+    write_line("Public exponent e: " + ::to_string(keys.e));
+    write_line("Private exponent d: " + ::to_string(keys.d));
+    write_line("");
+    write_line("Public key:  (" + ::to_string(keys.e) + ", " + ::to_string(keys.n) + ")");
+    write_line("Private key: (" + ::to_string(keys.d) + ", " + ::to_string(keys.n) + ")");
+}
+
+// Generates RSA keys using two prime numbers.
+void generate_keys(RSAKeyPair &keys)
+{
+    write_line("");
+    write_line("====== RSA KEY GENERATION ======");
+
+    int p = read_integer("Enter first prime number p: ");
+
+    while (!is_prime(p))
+    {
+        write_line(::to_string(p) + " is not prime.");
+        p = read_integer("Enter first prime number p: ");
+    }
+
+    int q = read_integer("Enter second prime number q: ");
+
+    while (!is_prime(q) or q == p)
+    {
+        if (!is_prime(q))
+        {
+            write_line(::to_string(q) + " is not prime.");
+        }
+        else
+        {
+            write_line("q must be different from p.");
+        }
+
+        q = read_integer("Enter second prime number q: ");
+    }
+
+    int n = p * q;
+
+    while (n <= 127)
+    {
+        write_line("");
+        write_line("p x q must be greater than 127 so normal text characters can be encrypted.");
+        write_line("Current n = " + ::to_string(n));
+        write_line("Please choose larger prime numbers.");
+
+        p = read_integer("Enter first prime number p: ");
+
+        while (!is_prime(p))
+        {
+            write_line(::to_string(p) + " is not prime.");
+            p = read_integer("Enter first prime number p: ");
+        }
+
+        q = read_integer("Enter second prime number q: ");
+
+        while (!is_prime(q) or q == p)
+        {
+            if (!is_prime(q))
+            {
+                write_line(::to_string(q) + " is not prime.");
+            }
+            else
+            {
+                write_line("q must be different from p.");
+            }
+
+            q = read_integer("Enter second prime number q: ");
+        }
+
+        n = p * q;
+    }
+
+    int phi = (p - 1) * (q - 1);
+
+    write_line("");
+    write_line("n = p x q = " + ::to_string(p) + " x " + ::to_string(q) + " = " + ::to_string(n));
+    write_line("phi = (p - 1)(q - 1) = " + ::to_string(p - 1) + " x " + ::to_string(q - 1) + " = " + ::to_string(phi));
+
+    int e = read_integer_range("Enter public exponent e, between 2 and phi - 1: ", 2, phi - 1);
+
+    while (gcd(e, phi) != 1)
+    {
+        write_line("");
+        write_line("e must be relatively prime to phi.");
+        write_line("gcd(" + ::to_string(e) + ", " + ::to_string(phi) + ") = " + ::to_string(gcd(e, phi)));
+        show_gcd_steps(e, phi);
+
+        e = read_integer_range("Enter public exponent e, between 2 and phi - 1: ", 2, phi - 1);
+    }
+
+    int d = find_modular_inverse(e, phi);
+
+    keys.p = p;
+    keys.q = q;
+    keys.n = n;
+    keys.phi = phi;
+    keys.e = e;
+    keys.d = d;
+    keys.generated = true;
+
+    write_line("");
+    write_line("RSA keys generated successfully.");
+    write_line("d was found by solving: e x d mod phi = 1");
+    write_line(::to_string(e) + " x " + ::to_string(d) + " mod " + ::to_string(phi) + " = 1");
+
+    view_current_keys(keys);
+}
+
 // Lets the user test whether a number is prime.
 void test_prime_checking()
 {
@@ -139,18 +289,16 @@ void display_menu()
 }
 
 // Runs the selected menu option.
-void run_menu_option(int choice)
+void run_menu_option(int choice, RSAKeyPair &keys)
 {
     switch (choice)
     {
     case 1:
-        write_line("");
-        write_line("Generate RSA keys feature coming soon.");
+        generate_keys(keys);
         break;
 
     case 2:
-        write_line("");
-        write_line("View current keys feature coming soon.");
+        view_current_keys(keys);
         break;
 
     case 3:
@@ -202,6 +350,9 @@ void run_menu_option(int choice)
 
 int main()
 {
+    RSAKeyPair keys;
+    keys.generated = false;
+
     int choice;
 
     write_line("Welcome to the RSA Cryptography Lab.");
@@ -210,7 +361,7 @@ int main()
     {
         display_menu();
         choice = read_integer_range("Choose an option: ", 0, 9);
-        run_menu_option(choice);
+        run_menu_option(choice, keys);
 
     } while (choice != 0);
 
