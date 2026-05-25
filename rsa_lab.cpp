@@ -595,7 +595,99 @@ void attempt_simple_rsa_crack()
         write_line("This may mean n is not the product of two prime numbers.");
     }
 }
+// Runs a guided demonstration of the RSA process using fixed sample values.
+void run_sample_demonstration()
+{
+    write_line("");
+    write_line("====== GUIDED RSA SAMPLE DEMONSTRATION ======");
+    write_line("");
+    write_line("This demonstration uses small RSA values so the process is easy to follow.");
+    write_line("In real RSA, the prime numbers would be much larger.");
+    write_line("");
 
+    RSAKeyPair demo_keys;
+    demo_keys.p = 17;
+    demo_keys.q = 11;
+    demo_keys.n = demo_keys.p * demo_keys.q;
+    demo_keys.phi = (demo_keys.p - 1) * (demo_keys.q - 1);
+    demo_keys.e = 7;
+    demo_keys.d = find_modular_inverse(demo_keys.e, demo_keys.phi);
+    demo_keys.generated = true;
+
+    write_line("Step 1: Choose two prime numbers");
+    write_line("p = " + ::to_string(demo_keys.p));
+    write_line("q = " + ::to_string(demo_keys.q));
+    write_line("");
+
+    write_line("Step 2: Calculate n");
+    write_line("n = p x q = " + ::to_string(demo_keys.p) + " x " + ::to_string(demo_keys.q) + " = " + ::to_string(demo_keys.n));
+    write_line("");
+
+    write_line("Step 3: Calculate phi");
+    write_line("phi = (p - 1)(q - 1)");
+    write_line("phi = " + ::to_string(demo_keys.p - 1) + " x " + ::to_string(demo_keys.q - 1) + " = " + ::to_string(demo_keys.phi));
+    write_line("");
+
+    write_line("Step 4: Choose e");
+    write_line("e = " + ::to_string(demo_keys.e));
+    write_line("Checking gcd(e, phi):");
+    show_gcd_steps(demo_keys.e, demo_keys.phi);
+    write_line("");
+
+    write_line("Step 5: Find d");
+    write_line("d = " + ::to_string(demo_keys.d));
+    write_line(::to_string(demo_keys.e) + " x " + ::to_string(demo_keys.d) + " mod " + ::to_string(demo_keys.phi) + " = 1");
+    write_line("");
+
+    write_line("Public key:  (" + ::to_string(demo_keys.e) + ", " + ::to_string(demo_keys.n) + ")");
+    write_line("Private key: (" + ::to_string(demo_keys.d) + ", " + ::to_string(demo_keys.n) + ")");
+    write_line("");
+
+    string message = "HI";
+    EncryptedMessage encrypted;
+    encrypted.length = message.length();
+    encrypted.available = true;
+
+    write_line("Step 6: Encrypt the sample message: " + message);
+    write_line("Formula: encrypted = message^e mod n");
+
+    for (int i = 0; i < encrypted.length; i++)
+    {
+        int ascii_value = message[i];
+        int encrypted_value = modular_power(ascii_value, demo_keys.e, demo_keys.n);
+        encrypted.values[i] = encrypted_value;
+
+        write_line("'" + string(1, message[i]) + "' -> ASCII " + ::to_string(ascii_value) + " -> encrypted " + ::to_string(encrypted_value));
+    }
+
+    write_line("");
+    write_line("Step 7: Decrypt the encrypted values");
+    write_line("Formula: decrypted = encrypted^d mod n");
+
+    string decrypted = "";
+
+    for (int i = 0; i < encrypted.length; i++)
+    {
+        int encrypted_value = encrypted.values[i];
+        int ascii_value = modular_power(encrypted_value, demo_keys.d, demo_keys.n);
+        char character = (char)ascii_value;
+
+        decrypted += character;
+
+        write_line(::to_string(encrypted_value) + " -> ASCII " + ::to_string(ascii_value) + " -> '" + string(1, character) + "'");
+    }
+
+    write_line("");
+    write_line("Decrypted message: " + decrypted);
+    write_line("");
+
+    write_line("Step 8: Demonstrate why small RSA keys are weak");
+    write_line("The public n value is " + ::to_string(demo_keys.n) + ".");
+    write_line("Because this n is small, it can be factorised:");
+    write_line(::to_string(demo_keys.n) + " = " + ::to_string(demo_keys.p) + " x " + ::to_string(demo_keys.q));
+    write_line("");
+    write_line("This shows why real RSA uses extremely large prime numbers.");
+}
 // Displays the main menu for the RSA Cryptography Lab.
 void display_menu()
 {
@@ -612,6 +704,7 @@ void display_menu()
     write_line("7. Show RSA maths explanation");
     write_line("8. Attempt simple RSA crack");
     write_line("9. Test prime and GCD functions");
+    write_line("10. Run guided RSA demonstration");
     write_line("0. Exit");
 }
 
@@ -662,6 +755,10 @@ void run_menu_option(int choice, RSAKeyPair &keys, EncryptedMessage &encrypted)
         test_gcd();
         break;
 
+    case 10:
+        run_sample_demonstration();
+        break;
+
     case 0:
         write_line("");
         write_line("Exiting RSA Cryptography Lab.");
@@ -685,7 +782,7 @@ int main()
     do
     {
         display_menu();
-        choice = read_integer_range("Choose an option: ", 0, 9);
+        choice = read_integer_range("Choose an option: ", 0, 10);
         run_menu_option(choice, keys, encrypted);
 
     } while (choice != 0);
