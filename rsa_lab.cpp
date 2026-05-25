@@ -38,6 +38,87 @@ int read_integer_range(string prompt, int minimum, int maximum)
     return value;
 }
 
+// Checks whether a number is prime.
+bool is_prime(int number)
+{
+    if (number < 2)
+    {
+        return false;
+    }
+
+    for (int divisor = 2; divisor * divisor <= number; divisor++)
+    {
+        if (number % divisor == 0)
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+// Calculates the greatest common divisor using Euclid's algorithm.
+int gcd(int a, int b)
+{
+    while (b != 0)
+    {
+        int remainder = a % b;
+        a = b;
+        b = remainder;
+    }
+
+    return a;
+}
+
+// Shows the steps of Euclid's algorithm.
+void show_gcd_steps(int a, int b)
+{
+    write_line("");
+    write_line("Euclidean Algorithm Steps:");
+
+    while (b != 0)
+    {
+        int quotient = a / b;
+        int remainder = a % b;
+
+        write_line(::to_string(a) + " = " + ::to_string(quotient) + " x " + ::to_string(b) + " + " + ::to_string(remainder));
+
+        a = b;
+        b = remainder;
+    }
+
+    write_line("GCD = " + ::to_string(a));
+}
+
+// Lets the user test whether a number is prime.
+void test_prime_checking()
+{
+    int number = read_integer("Enter a number to test if it is prime: ");
+
+    if (is_prime(number))
+    {
+        write_line(::to_string(number) + " is prime.");
+    }
+    else
+    {
+        write_line(::to_string(number) + " is not prime.");
+    }
+}
+
+// Lets the user test the GCD algorithm.
+void test_gcd()
+{
+    int first = read_integer("Enter the first number: ");
+    int second = read_integer("Enter the second number: ");
+
+    int result = gcd(first, second);
+
+    write_line("");
+    write_line("The GCD of " + ::to_string(first) + " and " + ::to_string(second) + " is " + ::to_string(result) + ".");
+
+    show_gcd_steps(first, second);
+}
+
 // Displays the main menu for the RSA Cryptography Lab.
 void display_menu()
 {
@@ -53,13 +134,11 @@ void display_menu()
     write_line("6. Load encrypted message from file");
     write_line("7. Show RSA maths explanation");
     write_line("8. Attempt simple RSA crack");
-    write_line("9. Run sample demonstration");
+    write_line("9. Test prime and GCD functions");
     write_line("0. Exit");
 }
 
 // Runs the selected menu option.
-// At this stage, each option is a placeholder.
-// Later iterations will replace these placeholders with working features.
 void run_menu_option(int choice)
 {
     switch (choice)
@@ -106,7 +185,12 @@ void run_menu_option(int choice)
 
     case 9:
         write_line("");
-        write_line("Sample demonstration feature coming soon.");
+        write_line("--- Prime Test ---");
+        test_prime_checking();
+
+        write_line("");
+        write_line("--- GCD Test ---");
+        test_gcd();
         break;
 
     case 0:
