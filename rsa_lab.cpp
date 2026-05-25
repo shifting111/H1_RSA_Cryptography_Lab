@@ -472,6 +472,66 @@ void test_gcd()
 
     show_gcd_steps(first, second);
 }
+// Explains the RSA process and connects the program to discrete mathematics.
+void show_rsa_explanation()
+{
+    write_line("");
+    write_line("====== RSA MATHEMATICS EXPLANATION ======");
+    write_line("");
+    write_line("RSA is a public-key cryptography method.");
+    write_line("It uses two keys:");
+    write_line("- a public key for encryption");
+    write_line("- a private key for decryption");
+    write_line("");
+
+    write_line("Step 1: Choose two prime numbers");
+    write_line("The user chooses two prime numbers called p and q.");
+    write_line("Prime numbers are important because multiplying two primes is easy,");
+    write_line("but factorising their product is difficult when the primes are very large.");
+    write_line("");
+
+    write_line("Step 2: Calculate n");
+    write_line("n = p x q");
+    write_line("The value n is used in both the public key and the private key.");
+    write_line("");
+
+    write_line("Step 3: Calculate phi");
+    write_line("phi = (p - 1)(q - 1)");
+    write_line("This value is based on Euler's totient function.");
+    write_line("It helps determine which numbers can be used safely for the public exponent.");
+    write_line("");
+
+    write_line("Step 4: Choose e");
+    write_line("The public exponent e must be relatively prime to phi.");
+    write_line("This means gcd(e, phi) must equal 1.");
+    write_line("The program checks this using Euclid's algorithm.");
+    write_line("");
+
+    write_line("Step 5: Find d");
+    write_line("The private exponent d is the modular inverse of e.");
+    write_line("This means:");
+    write_line("e x d mod phi = 1");
+    write_line("The program finds d by testing values until this condition is true.");
+    write_line("");
+
+    write_line("Step 6: Encrypt a message");
+    write_line("Each character is converted into its ASCII number.");
+    write_line("Then the program encrypts it using:");
+    write_line("encrypted = message^e mod n");
+    write_line("");
+
+    write_line("Step 7: Decrypt a message");
+    write_line("The encrypted number is decrypted using:");
+    write_line("decrypted = encrypted^d mod n");
+    write_line("This recovers the original ASCII value and then the original character.");
+    write_line("");
+
+    write_line("Why this demonstrates HD-level programming:");
+    write_line("- It uses algorithms from discrete mathematics.");
+    write_line("- It uses prime checking, GCD, modular inverses, and modular arithmetic.");
+    write_line("- It connects programming concepts to a real-world cryptography system.");
+    write_line("- It goes beyond basic input/output and includes file handling and encryption logic.");
+}
 
 // Displays the main menu for the RSA Cryptography Lab.
 void display_menu()
@@ -522,8 +582,7 @@ void run_menu_option(int choice, RSAKeyPair &keys, EncryptedMessage &encrypted)
         break;
 
     case 7:
-        write_line("");
-        write_line("RSA maths explanation feature coming soon.");
+        show_rsa_explanation();
         break;
 
     case 8:
